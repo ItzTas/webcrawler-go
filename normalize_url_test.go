@@ -18,6 +18,16 @@ func TestNormalizeURL(t *testing.T) {
 			input:    "https://t.test/path",
 			expected: "t.test/path",
 		},
+		{
+			name:     "remove path trailing slash",
+			input:    "https://t.test/path/",
+			expected: "t.test/path",
+		},
+		{
+			name:     "remove name trailing slash ",
+			input:    "https://t.test/",
+			expected: "t.test",
+		},
 	}
 
 	for i, tt := range tests {
@@ -26,7 +36,7 @@ func TestNormalizeURL(t *testing.T) {
 
 			assert.Nil(t, err, fmt.Sprintf("Test: %v '%s' FAIL: unexpected error: %v", i, tt.name, err))
 
-			assert.Equal(t, actual, tt.expected, fmt.Sprintf("Test %v - '%s' FAIL: expected URL: %v, actual: %v", i, tt.name, tt.expected, actual))
+			assert.Equal(t, tt.expected, actual, fmt.Sprintf("Test %v - '%s' FAIL: expected URL: %v, actual: %v", i, tt.name, tt.expected, actual))
 		})
 	}
 }
