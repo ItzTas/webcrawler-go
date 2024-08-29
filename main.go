@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/ItzTas/webcrawler-go/internal/client"
 )
 
-func getArgs() []string {
+func getUrlArg() string {
 	args := os.Args
 	if len(args) == 1 {
 		fmt.Println("no website provided")
@@ -15,11 +18,13 @@ func getArgs() []string {
 		fmt.Println("too many arguments provided")
 		os.Exit(1)
 	}
-	return args
+	return args[1]
 }
 
 func main() {
-	args := getArgs()
+	c := client.NewClient(5 * time.Second)
 
-	fmt.Println(args)
+	url := getUrlArg()
+
+	fmt.Println(c.GetHTML(url))
 }
