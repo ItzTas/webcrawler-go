@@ -32,11 +32,12 @@ func TestNormalizeURL(t *testing.T) {
 
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			assert := assert.New(t)
 			actual, err := normalizeURL(tt.input)
 
-			assert.Nil(t, err, fmt.Sprintf("Test: %v '%s' FAIL: unexpected error: %v", i, tt.name, err))
+			assert.Nil(err, fmt.Sprintf("Test: %v '%s' FAIL: unexpected error: %v", i, tt.name, err))
 
-			assert.Equal(t, tt.expected, actual, fmt.Sprintf("Test %v - '%s' FAIL: expected URL: %v, actual: %v", i, tt.name, tt.expected, actual))
+			assert.Equal(tt.expected, actual, fmt.Sprintf("Test %v - '%s' FAIL: expected URL: %v, actual: %v", i, tt.name, tt.expected, actual))
 		})
 	}
 }
