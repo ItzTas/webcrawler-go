@@ -2,37 +2,46 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"strconv"
 	"time"
-
-	"github.com/ItzTas/webcrawler-go/internal/client"
 )
 
-func getUrlArg() string {
+func getArgs() (string, int, int) {
 	args := os.Args
 	if len(args) == 1 {
 		fmt.Println("no website provided")
 		os.Exit(1)
 	}
-	if len(args) > 2 {
-		fmt.Println("too many arguments provided")
+	if len(args) < 4 {
+		fmt.Println("not sufficient args want: url, maxConcurrency, maxPages")
 		os.Exit(1)
 	}
-	return args[1]
-}
-
-type Config struct {
-	c client.Client
+	maxConcorrency, err := strconv.Atoi(args[2])
+	if err != nil {
+		log.Fatal(err)
+	}
+	maxPages, err := strconv.Atoi(args[3])
+	if err != nil {
+		log.Fatal(err)
+	}
+	return args[1], maxConcorrency, maxPages
 }
 
 func main() {
-	cfg := Config{
-		c: *client.NewClient(5 * time.Second),
+	url, maxConcurrency, maxPages := getArgs()
+
+	cfg, err := newConfig(5*time.Second, url, maxConcurrency, maxPages)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	url := getUrlArg()
+	cfg.wg.Add(1)
+	go cfg.crawlPage(url)
+	cfg.wg.Wait()
 
-	pages := make(map[string]int)
-	fmt.Println(cfg.crawlPage(url, url, pages))
-	fmt.Println(pages)
+	for k, v := range cfg.pages {
+		fmt.Printf("%s, %d\n", k, v)
+	}
 }

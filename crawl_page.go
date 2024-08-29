@@ -5,49 +5,65 @@ import (
 	"net/url"
 )
 
-func (c *Config) crawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) error {
-	baseURL, err := url.Parse(rawBaseURL)
-	if err != nil {
-		return err
+func (cfg *Config) addPageVisit(normalizedURL string) (isFirst bool) {
+	cfg.mu.Lock()
+	defer cfg.mu.Unlock()
+	if _, isFirst = cfg.pages[normalizedURL]; isFirst {
+		cfg.pages[normalizedURL] += 1
+		return false
 	}
+
+	cfg.pages[normalizedURL] = 1
+	return true
+}
+
+func (cfg *Config) crawlPage(rawCurrentURL string) {
+	cfg.concurrencyControl <- struct{}{}
+	defer func() {
+		<-cfg.concurrencyControl
+		cfg.wg.Done()
+	}()
+
+	cfg.mu.Lock()
+	if len(cfg.pages) >= cfg.maxPages {
+		cfg.mu.Unlock()
+		return
+	}
+	cfg.mu.Unlock()
+
 	currentURL, err := url.Parse(rawCurrentURL)
 	if err != nil {
-		return err
+		return
 	}
 
-	if baseURL.Hostname() != currentURL.Hostname() {
-		return nil
+	if cfg.baseURL.Hostname() != currentURL.Hostname() {
+		return
 	}
 
-	normCurr, err := normalizeURL(rawCurrentURL)
+	normalizedURL, err := normalizeURL(rawCurrentURL)
 	if err != nil {
-		return err
+		return
 	}
 
-	if _, ok := pages[normCurr]; ok {
-		pages[normCurr] += 1
-		return nil
+	if !cfg.addPageVisit(normalizedURL) {
+		return
 	}
 
-	pages[normCurr] = 1
-
-	html, err := c.c.GetHTML(rawCurrentURL)
+	html, err := cfg.c.GetHTML(rawCurrentURL)
 	if err != nil {
-		return nil
+		return
 	}
 
 	fmt.Printf("\ngot html of url: %v\n", currentURL)
 
-	urls, err := getURLsFromHTML(html, rawBaseURL)
+	urls, err := getURLsFromHTML(html, cfg.baseURL.String())
 	if err != nil {
-		return err
+		return
 	}
 
 	for _, u := range urls {
-		err := c.crawlPage(rawBaseURL, u, pages)
-		if err != nil {
-			return err
-		}
+		cfg.wg.Add(1)
+		go cfg.crawlPage(u)
 	}
-	return nil
+	return
 }
