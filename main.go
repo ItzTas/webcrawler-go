@@ -26,7 +26,8 @@ func getArgs() (string, int, int) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return args[1], maxConcorrency, maxPages
+	url := args[1]
+	return url, maxConcorrency, maxPages
 }
 
 func main() {
@@ -41,7 +42,5 @@ func main() {
 	go cfg.crawlPage(url)
 	cfg.wg.Wait()
 
-	for k, v := range cfg.pages {
-		fmt.Printf("%s, %d\n", k, v)
-	}
+	printReports(cfg.pages, url)
 }

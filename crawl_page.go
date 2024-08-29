@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/url"
 )
 
@@ -53,8 +52,6 @@ func (cfg *Config) crawlPage(rawCurrentURL string) {
 	if err != nil {
 		return
 	}
-
-	fmt.Printf("\ngot html of url: %v\n", currentURL)
 
 	urls, err := getURLsFromHTML(html, cfg.baseURL.String())
 	if err != nil {
