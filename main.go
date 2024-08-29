@@ -21,10 +21,18 @@ func getUrlArg() string {
 	return args[1]
 }
 
+type Config struct {
+	c client.Client
+}
+
 func main() {
-	c := client.NewClient(5 * time.Second)
+	cfg := Config{
+		c: *client.NewClient(5 * time.Second),
+	}
 
 	url := getUrlArg()
 
-	fmt.Println(c.GetHTML(url))
+	pages := make(map[string]int)
+	fmt.Println(cfg.crawlPage(url, url, pages))
+	fmt.Println(pages)
 }
